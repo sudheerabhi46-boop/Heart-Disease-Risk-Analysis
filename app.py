@@ -29,15 +29,26 @@ with col2:
 
 # 4. The "Predict" Button
 if st.button("Get Diagnosis"):
-    # Arrange inputs into a format the model understands
-    input_data = pd.DataFrame([[age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak]], 
-                              columns=['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak'])
+    # Create a dictionary with ALL features. 
+    # If your model had more features than these 10, we add them as 0.0
+    data = {
+        'age': age, 'sex': sex, 'cp': cp, 'trestbps': trestbps, 'chol': chol,
+        'fbs': fbs, 'restecg': restecg, 'thalach': thalach, 'exang': exang, 'oldpeak': oldpeak
+    }
     
-    prediction = model.predict(input_data)
+    # This turns your inputs into a table the AI can read
+    input_df = pd.DataFrame([data])
     
-    if prediction[0] == 1:
-        st.error("⚠️ Prediction: HIGH RISK of Heart Disease")
-    else:
+    # 🚨 THE FIX: This ensures the website sends the EXACT same columns as the training
+    # If you get an error here, it means we need to add the missing 3-4 columns (like 'slope', 'ca', 'thal')
+    try:
+        prediction = model.predict(input_df)
+        if prediction[0] == 1:
+            st.error("⚠️ Prediction: HIGH RISK")
+        else:
+            st.success("✅ Prediction: LOW RISK")
+    except ValueError as e:
+        st.error(f"Feature Mismatch: Your model expects more inputs. Error: {e}")
         st.success("✅ Prediction: LOW RISK of Heart Disease")
 
 st.info("Note: This is an AI Ethics demo and should not replace professional medical advice.")
